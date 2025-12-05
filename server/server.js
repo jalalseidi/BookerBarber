@@ -40,6 +40,7 @@ const corsOptions = {
     const allowedOrigins = [
       'http://localhost:5174',
       'http://localhost:3000',
+      'https://booker-barber.vercel.app',
       'https://barber-booker1.vercel.app',
       process.env.FRONTEND_URL
     ].filter(Boolean);
@@ -69,70 +70,96 @@ if (process.env.NODE_ENV === 'production') {
 // Check if MongoDB is installed and running
 const { exec } = require('child_process');
 
-// Database connection - async IIFE to ensure MongoDB is connected before starting the server
-(async () => {
-  try {
-    // Check if MongoDB is running (platform-specific)
-    if (process.platform === 'win32') {
-      logger.info('Checking if MongoDB is running on Windows...');
-      exec('sc query MongoDB', (error, stdout) => {
-        if (error || stdout.includes('STOPPED')) {
-          logger.warn('MongoDB service might not be running. Please start MongoDB before using this application.');
-          logger.warn('You can start MongoDB by running: net start MongoDB');
-        } else if (stdout.includes('RUNNING')) {
-          logger.info('MongoDB service appears to be running.');
-        }
-      });
-    } else if (process.platform === 'linux' || process.platform === 'darwin') {
-      logger.info(`Checking if MongoDB is running on ${process.platform}...`);
-      exec('pgrep mongod', (error) => {
-        if (error) {
-          logger.warn('MongoDB process might not be running. Please start MongoDB before using this application.');
-          logger.warn('You can start MongoDB by running: sudo service mongod start (Linux) or brew services start mongodb-community (macOS)');
-        } else {
-          logger.info('MongoDB process appears to be running.');
-        }
-      });
+// Connect to database
+let dbConnected = false;
+const initializeDatabase = async () => {
+  if (!dbConnected) {
+    try {
+      logger.info('Connecting to MongoDB...');
+      await connectDB();
+      dbConnected = true;
+      logger.info('MongoDB connected successfully');
+    } catch (error) {
+      logger.error(`MongoDB connection failed: ${error.message}`);
+      throw error;
     }
-
-    // Attempt to connect to MongoDB
-    logger.info('Attempting to connect to MongoDB database...');
-    await connectDB();
-    logger.info('MongoDB connection established successfully');
-
-    // Start the server only after successful database connection
-    app.listen(port, () => {
-      logger.info(`Server running at http://localhost:${port}`);
-    });
-  } catch (error) {
-    logger.error('Failed to connect to MongoDB. Server will not start.');
-    logger.error(`Error details: ${error.message}`);
-
-    // Provide helpful instructions based on the error
-    if (error.name === 'MongoServerSelectionError') {
-      logger.error('\nPossible solutions:');
-      logger.error('1. Make sure MongoDB is installed and running');
-      logger.error('2. Check if the MongoDB connection string in .env file is correct');
-      logger.error('3. Verify that MongoDB is listening on the specified port');
-
-      if (process.platform === 'win32') {
-        logger.error('\nOn Windows, you can:');
-        logger.error('- Check MongoDB service status: sc query MongoDB');
-        logger.error('- Start MongoDB service: net start MongoDB');
-      } else if (process.platform === 'linux') {
-        logger.error('\nOn Linux, you can:');
-        logger.error('- Check MongoDB service status: sudo systemctl status mongod');
-        logger.error('- Start MongoDB service: sudo systemctl start mongod');
-      } else if (process.platform === 'darwin') {
-        logger.error('\nOn macOS, you can:');
-        logger.error('- Check MongoDB service status: brew services list | grep mongodb');
-        logger.error('- Start MongoDB service: brew services start mongodb-community');
-      }
-    }
-
-    process.exit(1);
   }
-})();
+};
+
+// Middleware to ensure database is connected before handling requests
+app.use(async (req, res, next) => {
+  try {
+    await initializeDatabase();
+    next();
+  } catch (error) {
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
+
+// Start server if not in serverless environment (Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  (async () => {
+    try {
+      // Check if MongoDB is running (platform-specific)
+      if (process.platform === 'win32') {
+        logger.info('Checking if MongoDB is running on Windows...');
+        exec('sc query MongoDB', (error, stdout) => {
+          if (error || stdout.includes('STOPPED')) {
+            logger.warn('MongoDB service might not be running. Please start MongoDB before using this application.');
+            logger.warn('You can start MongoDB by running: net start MongoDB');
+          } else if (stdout.includes('RUNNING')) {
+            logger.info('MongoDB service appears to be running.');
+          }
+        });
+      } else if (process.platform === 'linux' || process.platform === 'darwin') {
+        logger.info(`Checking if MongoDB is running on ${process.platform}...`);
+        exec('pgrep mongod', (error) => {
+          if (error) {
+            logger.warn('MongoDB process might not be running. Please start MongoDB before using this application.');
+            logger.warn('You can start MongoDB by running: sudo service mongod start (Linux) or brew services start mongodb-community (macOS)');
+          } else {
+            logger.info('MongoDB process appears to be running.');
+          }
+        });
+      }
+
+      // Attempt to connect to MongoDB
+      await initializeDatabase();
+
+      // Start the server only after successful database connection
+      app.listen(port, () => {
+        logger.info(`Server running at http://localhost:${port}`);
+      });
+    } catch (error) {
+      logger.error('Failed to connect to MongoDB. Server will not start.');
+      logger.error(`Error details: ${error.message}`);
+
+      // Provide helpful instructions based on the error
+      if (error.name === 'MongoServerSelectionError') {
+        logger.error('\nPossible solutions:');
+        logger.error('1. Make sure MongoDB is installed and running');
+        logger.error('2. Check if the MongoDB connection string in .env file is correct');
+        logger.error('3. Verify that MongoDB is listening on the specified port');
+
+        if (process.platform === 'win32') {
+          logger.error('\nOn Windows, you can:');
+          logger.error('- Check MongoDB service status: sc query MongoDB');
+          logger.error('- Start MongoDB service: net start MongoDB');
+        } else if (process.platform === 'linux') {
+          logger.error('\nOn Linux, you can:');
+          logger.error('- Check MongoDB service status: sudo systemctl status mongod');
+          logger.error('- Start MongoDB service: sudo systemctl start mongod');
+        } else if (process.platform === 'darwin') {
+          logger.error('\nOn macOS, you can:');
+          logger.error('- Check MongoDB service status: brew services list | grep mongodb');
+          logger.error('- Start MongoDB service: brew services start mongodb-community');
+        }
+      }
+
+      process.exit(1);
+    }
+  })();
+}
 
 app.on("error", (error) => {
   logger.error(`Server error: ${error.message}`);
@@ -171,4 +198,5 @@ app.use((req, res, next) => {
 const { errorMiddleware } = require('./utils/errorHandler');
 app.use(errorMiddleware);
 
-// Server is started in the async IIFE above after MongoDB connection is established
+// Export app for Vercel serverless
+module.exports = app;
