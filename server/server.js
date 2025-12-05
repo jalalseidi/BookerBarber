@@ -61,6 +61,11 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from the React app in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/dist')));
+}
+
 // Check if MongoDB is installed and running
 const { exec } = require('child_process');
 
@@ -148,6 +153,13 @@ app.use('/api/services', serviceRoutes);
 app.use('/api/notifications', notificationRoutes);
 // Message Routes
 app.use('/api/messages', messageRoutes);
+
+// Serve React app for all non-API routes in production
+if (process.env.NODE_ENV === 'production') {
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/dist/index.html'));
+  });
+}
 
 // If no routes handled the request, it's a 404
 app.use((req, res, next) => {

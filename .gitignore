@@ -65,3 +65,7 @@ workspace/
 *.backup
 *.bak
 *.old
+
+# Deployment guides
+DEPLOYMENT.md
+DEPLOY_QUICK_START.md
