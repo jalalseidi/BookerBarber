@@ -1,0 +1,200 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 84 100% 59%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 84 100% 59%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 7%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 84 100% 59%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 84 100% 59%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted/20;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+/* Smooth animations */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Glass effect */
+.glass {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark .glass {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive button sizing */
+@layer components {
+  .btn-responsive {
+    @apply h-10 px-4 py-2 text-sm;
+  }
+  
+  @screen sm {
+    .btn-responsive {
+      @apply h-11 px-6 py-2.5 text-base;
+    }
+  }
+  
+  @screen md {
+    .btn-responsive {
+      @apply h-12 px-8 py-3 text-base;
+    }
+  }
+  
+  /* Ensure consistent button heights in flex containers */
+  .button-group {
+    @apply flex flex-col gap-2;
+  }
+  
+  @screen sm {
+    .button-group {
+      @apply flex-row gap-3;
+    }
+  }
+  
+  .button-group .btn-responsive {
+    @apply w-full justify-center;
+  }
+  
+  @screen sm {
+    .button-group .btn-responsive {
+      @apply w-auto;
+    }
+  }
+  
+  /* Responsive card layouts */
+  .card-grid {
+    @apply grid grid-cols-1 gap-4;
+  }
+  
+  @screen sm {
+    .card-grid {
+      @apply grid-cols-2 gap-6;
+    }
+  }
+  
+  @screen lg {
+    .card-grid {
+      @apply grid-cols-3 gap-6;
+    }
+  }
+}
+
+/* Enhanced styling for date and time inputs */
+@layer components {
+  /* Ensure date and time inputs have proper contrast */
+  input[type="date"],
+  input[type="time"] {
+    @apply text-gray-900 bg-white;
+    color-scheme: light;
+  }
+  
+  /* Style the date/time input icons and arrows */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    @apply cursor-pointer;
+    opacity: 0.7;
+  }
+  
+  input[type="date"]::-webkit-calendar-picker-indicator:hover,
+  input[type="time"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+  
+  /* Ensure consistent styling across all form inputs */
+  .form-input {
+    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 placeholder-gray-500;
+    color-scheme: light;
+  }
+  
+  /* Dark mode compatibility for inputs */
+  .dark input[type="date"],
+  .dark input[type="time"],
+  .dark .form-input {
+    @apply bg-gray-800 text-gray-100 border-gray-600;
+    color-scheme: dark;
+  }
+  
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
