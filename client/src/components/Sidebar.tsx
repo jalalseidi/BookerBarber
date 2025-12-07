@@ -11,7 +11,11 @@ import {
   Settings
 } from "lucide-react";
 
-export function Sidebar() {
+interface SidebarProps {
+  onItemClick?: () => void;
+}
+
+export function Sidebar({ onItemClick }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
@@ -39,6 +43,11 @@ export function Sidebar() {
     },
   ];
 
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    onItemClick?.();
+  };
+
   const isActive = (path: string) => {
     if (path === '/app') {
       return location.pathname === '/app';
@@ -49,7 +58,7 @@ export function Sidebar() {
   return (
     <div className="flex h-full w-64 flex-col bg-background border-r">
       <Separator />
-      
+
       <nav className="flex-1 space-y-2 p-4">
         {menuItems.map((item) => {
           const Icon = item.icon;
@@ -58,7 +67,7 @@ export function Sidebar() {
               key={item.path}
               variant={isActive(item.path) ? "default" : "ghost"}
               className="w-full justify-start gap-3"
-              onClick={() => navigate(item.path)}
+              onClick={() => handleNavigation(item.path)}
             >
               <Icon className="h-4 w-4" />
               {item.label}
@@ -66,22 +75,22 @@ export function Sidebar() {
           );
         })}
       </nav>
-      
+
       <Separator />
-      
+
       <div className="p-4 space-y-2">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="w-full justify-start gap-3"
-          onClick={() => navigate('/app/profile')}
+          onClick={() => handleNavigation('/app/profile')}
         >
           <User className="h-4 w-4" />
           {t('nav.profile')}
         </Button>
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           className="w-full justify-start gap-3"
-          onClick={() => navigate('/app/settings')}
+          onClick={() => handleNavigation('/app/settings')}
         >
           <Settings className="h-4 w-4" />
           {t('nav.settings')}
